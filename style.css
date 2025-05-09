@@ -1,5 +1,5 @@
 /* ================================================================== */
-/* style.css - ONSPプロジェクト用 (ShikoShiko Mode Layout & Style) */
+/* style.css - ONSPプロジェクト用 (vRebuild 2.16.11 + Sticker for Fortune v3 - Layout) */
 /* ================================================================== */
 
 /* --- 基本設定 ～ イメプレイセクション共通スタイル --- */
@@ -23,7 +23,7 @@ body {
     --default-quote-color: #495057;
     --default-button-text: #fff;
     --imepure-base-bg: #f0f2f5;
-    --pulse-duration: 2s; /* 背景点滅用だが、しこしこモードでは使わないかも */
+    --pulse-duration: 2s;
     --pulse-brightness-factor: 1.3;
     --pulse-hue: 0;
     --pulse-sat: 0%;
@@ -35,7 +35,6 @@ body {
     --member-accent-color: var(--default-accent-color);
     --member-button-text: var(--default-button-text);
     --member-accent-color-rgb: 108, 117, 125;
-    --shiko-anim-duration: 2s; /* しこしこアニメーション速度 */
     scrollbar-width: thin;
     scrollbar-color: #adb5bd #f1f3f5;
 }
@@ -45,7 +44,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background-color: #868e96; }
 body { background-color: var(--default-main-bg); transition: background-color 0.3s ease-in-out; }
 body.imepure-active { background-color: var(--imepure-base-bg); }
-body.fortune-active { background-color: var(--member-main-bg); } /* fortune-active はしこしこモードでも流用 */
+body.fortune-active { background-color: var(--member-main-bg); }
 .tab-container { display: flex; background-color: #fff; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0, 0, 0, .05); max-width: 700px; margin: 0 auto; border-radius: 8px 8px 0 0; flex-shrink: 0; }
 .tab-button { padding: 12px 18px; border: none; background-color: transparent; cursor: pointer; font-size: 1rem; color: #495057; border-bottom: 3px solid transparent; transition: background-color .2s, color .2s, border-bottom-color .3s ease-out; outline: none; font-weight: 500; flex-grow: 1; text-align: center; position: relative; white-space: nowrap; user-select: none; }
 .tab-button.active::after { content: ''; position: absolute; bottom: -1px; left: 15%; right: 15%; height: 3px; background-color: var(--member-accent-color, var(--default-accent-color)); border-radius: 2px; transition: background-color 0.3s ease-in-out; }
@@ -56,13 +55,14 @@ body.fortune-active { background-color: var(--member-main-bg); } /* fortune-acti
 /* --- タブコンテンツ基本スタイル調整 --- */
 .tab-content {
     display: none;
+    /* padding: 0; */ /* fortuneSection以外はpadding必要なので削除 */
     box-sizing: border-box;
     max-width: 100%;
     margin: 0 auto;
     border-radius: 0 0 8px 8px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, .1);
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* overflow: hidden は fortuneSection ではレイアウトに影響する可能性 */
     background-color: #fff;
     flex-grow: 1;
     width: 100%;
@@ -71,78 +71,27 @@ body.fortune-active { background-color: var(--member-main-bg); } /* fortune-acti
 
 /* --- 各タブのスタイル調整 --- */
 #counterSection, #gallerySection {
+    /* padding: 25px; */ /* fortuneSectionは内部でpadding管理するので削除 */
+    /* max-width: 700px; */ /* fortuneSectionは広げるので削除 */
     flex-direction: column;
     overflow: auto;
+}
+/* counter, gallery は padding と max-width を維持 */
+#counterSection, #gallerySection {
     padding: 25px;
     max-width: 700px;
 }
-#counterSection { background-color: #fff; }
-#gallerySection { background-color: #fff; }
 
-/* しこしこモード (#fortuneSection) */
+/* fortuneSection は背景色のみ */
 #fortuneSection {
     background-color: var(--member-display-bg, var(--default-display-bg));
     padding: 0; /* ラッパーでpadding管理 */
-    overflow: visible; /* カラムレイアウトのため */
+    overflow: visible; /* カラムレイアウトのため visible に変更 */
     max-width: none; /* 最大幅解除 */
     flex-direction: column; /* 基本は縦だが、wrapperで横にする */
 }
 
-/* --- ▼▼▼ 残り時間バー ▼▼▼ --- */
-#remainingTimeBarContainer {
-    width: 100%;
-    padding: 10px 25px; /* 左右のパディングをwrapperに合わせる */
-    box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    position: sticky; /* 上部に固定 */
-    top: 61px; /* .tab-container の高さに合わせて調整 */
-    z-index: 90; /* タブより下、コンテンツより上 */
-    backdrop-filter: blur(2px); /* 背景ぼかし（オプション） */
-}
-.time-bar-label {
-    font-size: 0.85em;
-    text-align: center;
-    margin-bottom: 5px;
-    color: var(--member-text-color, var(--default-text-color));
-    font-weight: 500;
-}
-#remainingTimeBar {
-    width: 100%;
-    height: 8px;
-    border-radius: 4px;
-    overflow: hidden;
-    border: none;
-    background-color: #e9ecef; /* バーの背景 */
-    appearance: none; /* デフォルトスタイル解除 */
-    -webkit-appearance: none;
-}
-/* Chrome, Edge, Safari */
-#remainingTimeBar::-webkit-progress-bar {
-    background-color: #e9ecef;
-    border-radius: 4px;
-}
-#remainingTimeBar::-webkit-progress-value {
-    background-color: var(--member-accent-color, var(--default-accent-color));
-    border-radius: 4px 0 0 4px; /* 左側だけ角丸に */
-    transition: background-color 0.3s ease-in-out;
-}
-/* Firefox */
-#remainingTimeBar::-moz-progress-bar {
-    background-color: var(--member-accent-color, var(--default-accent-color));
-    border-radius: 4px;
-    transition: background-color 0.3s ease-in-out;
-}
-/* 値が100%の時に右端も角丸にする (Firefox用) */
-#remainingTimeBar[value="100"]::-moz-progress-bar {
-    border-radius: 4px;
-}
-#remainingTimeBar[value="100"]::-webkit-progress-value {
-    border-radius: 4px;
-}
-
-
-/* --- ▼▼▼ しこしこモード 3カラムレイアウト ▼▼▼ --- */
+/* --- ▼▼▼ 占いタブ 3カラムレイアウト ▼▼▼ --- */
 .fortune-wrapper {
     display: flex;
     width: 100%;
@@ -153,51 +102,56 @@ body.fortune-active { background-color: var(--member-main-bg); } /* fortune-acti
     box-sizing: border-box;
     align-items: flex-start; /* 上揃え */
     flex-grow: 1; /* tab-content内で高さを広げる */
-    margin-top: 45px; /* 時間バーの高さ分下げる */
 }
 
 .fortune-left-column,
 .fortune-right-column {
-    flex: 0 0 280px; /* 左右カラムの幅を固定 */
+    flex: 0 0 280px; /* 左右カラムの幅を固定 (調整可能) */
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    position: sticky;
-    top: 120px; /* 時間バーの高さ + タブの高さ + α */
-    max-height: calc(100vh - 140px); /* スティッキー時の最大高さ調整 */
-    overflow-y: auto;
-    padding-bottom: 20px;
+    gap: 15px; /* カラム内要素の隙間 */
+    position: sticky; /* スクロール時に追従させる (オプション) */
+    top: 80px; /* .tab-container の高さ + α */
+    max-height: calc(100vh - 100px); /* スティッキー時の最大高さ */
+    overflow-y: auto; /* 高さを超えたらスクロール */
+    padding-bottom: 20px; /* スクロールバーのための余白 */
 }
-.fortune-right-column { scrollbar-width: none; /* Firefox */ }
-.fortune-right-column::-webkit-scrollbar { display: none; /* Chrome, Safari, Edge */ }
+/* 右カラムはデフォルトでスクロールバー非表示にする場合 */
+.fortune-right-column {
+   scrollbar-width: none; /* Firefox */
+}
+.fortune-right-column::-webkit-scrollbar {
+   display: none; /* Chrome, Safari, Edge */
+}
+
 
 .fortune-center-column {
     flex: 1 1 auto; /* 中央カラムは可変幅 */
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    min-width: 0; /* flexアイテムの縮小問題を回避 */
 }
 
 /* 中央カラム内の要素の調整 */
 .fortune-center-column h1 {
-    margin-bottom: 20px;
+    margin-bottom: 20px; /* タイトル下のマージン */
     text-align: center; color: var(--member-text-color, var(--default-text-color)); margin-top: 0; font-size: 1.6rem; font-weight: 600; flex-shrink: 0;
 }
 .fortune-center-column .display-area {
-    margin-bottom: 20px;
-    width: 100%;
+    margin-bottom: 20px; /* 画像エリア下のマージン */
+    width: 100%; /* 中央カラム幅に合わせる */
     box-sizing: border-box;
     text-align: center; background-color: #fff; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; flex-shrink: 0; position: relative; overflow: hidden;
 }
 .fortune-center-column .button-area {
-    margin-bottom: 0;
+    margin-bottom: 0; /* ボタンエリア下のマージン削除 */
     text-align: center; margin-top: 0; flex-shrink: 0;
 }
 
 /* 左カラム内のアコーディオン調整 */
 .fortune-left-column .member-selection-accordion {
-    margin-bottom: 0;
-    width: 100%;
+    margin-bottom: 0; /* 下マージン削除 */
+    width: 100%; /* カラム幅に合わせる */
     box-sizing: border-box;
     border: 1px solid #e0e0e0; border-radius: 6px; background-color: #fff; overflow: hidden; flex-shrink: 0;
 }
@@ -207,65 +161,42 @@ body.fortune-active { background-color: var(--member-main-bg); } /* fortune-acti
 .fortune-left-column .member-selection-accordion .accordion-toggle .toggle-icon { position: absolute; right: 18px; top: 50%; transform: translateY(-50%) rotate(0deg); transition: transform .3s ease-in-out; font-size: 1.2em; color: #6c757d; }
 .fortune-left-column .member-selection-accordion .accordion-toggle.active .toggle-icon { transform: translateY(-50%) rotate(180deg); }
 .fortune-left-column .member-selection-accordion .accordion-content { max-height: 0; overflow: hidden; transition: max-height .3s ease-out, padding .3s ease-out; background-color: #fff; padding: 0 18px; box-sizing: border-box; }
-.fortune-left-column .member-selection-accordion .accordion-content.open { max-height: calc(100vh - 220px); /* 高さをビューポート基準に調整 */ overflow-y: auto; padding: 18px; border-top: 1px solid #e0e0e0; }
-
-/* 時間設定UIのスタイル */
-.game-duration-group .duration-setting-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.game-duration-group label {
-    width: auto; /* ラベル幅自動 */
-    flex-shrink: 0;
-    margin-right: 5px;
-    font-size: .9rem;
-    color: #495057;
-}
-.game-duration-group input[type=number] {
-    flex-grow: 1;
-    padding: 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: .95rem;
-    box-sizing: border-box;
-    max-width: 100px; /* 幅制限 */
-}
-.game-duration-group input[type=number]:focus {
-    border-color: var(--member-accent-color,#888);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--member-accent-color-rgb,108,117,125),.2);
-}
+.fortune-left-column .member-selection-accordion .accordion-content.open { max-height: calc(100vh - 180px); /* 高さをビューポート基準に調整 */ overflow-y: auto; padding: 18px; border-top: 1px solid #e0e0e0; }
 
 
 /* 右カラム内のステッカーセクション調整 */
 .fortune-right-column #stickerSection {
-    margin-top: 0; padding-top: 0; border-top: none; width: 100%; box-sizing: border-box;
+    margin-top: 0; /* 上マージン削除 */
+    padding-top: 0; /* 上パディング削除 */
+    border-top: none; /* 上ボーダー削除 */
+    width: 100%;
+    box-sizing: border-box;
 }
-.fortune-right-column #stickerSection h4 {
+.fortune-right-column #stickerSection h4 { /* 見出しスタイル */
     font-size: 1rem; font-weight: 500; margin-top: 0; margin-bottom: 12px; color: #495057; text-align: center;
 }
 .fortune-right-column #stickerChoiceContainer {
-    max-height: 300px; /* ステッカー選択肢の高さ */
+    max-height: 300px; /* ステッカー選択肢の高さを調整 */
     display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #eee; overflow-y: auto;
 }
 
-/* --- ▲▲▲ しこしこモード 3カラムレイアウト ▲▲▲ --- */
+/* --- ▲▲▲ 占いタブ 3カラムレイアウト ▲▲▲ --- */
 
-/* しこしこモード内の共通スタイル (旧 占いタブ) */
+
+/* 占いタブ内の共通スタイル */
 .fortune-header { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px; }
 #memberName { color: var(--member-text-color, var(--default-text-color)); margin: 0; font-size: 1.8em; font-weight: bold; }
 .weak-point-toggle { background: none; border: none; cursor: pointer; font-size: 1.2em; padding: 5px; line-height: 1; flex-shrink: 0; color: #adb5bd; transition: color 0.2s, background-color 0.2s; border-radius: 50%; user-select: none; }
 .weak-point-toggle.is-weak { color: #fcc419; font-weight: bold; }
 .weak-point-toggle:hover { background-color: #f0f0f0; }
-#memberImage { display: block; margin: 0 auto 15px auto; max-width: 85%; height: auto; max-height: 55vh; /* 少し高さを広げる */ border-radius: 8px; border: 4px solid var(--member-accent-color, #ddd); object-fit: contain; background-color: #f0f0f0; box-shadow: 0 2px 5px rgba(0, 0, 0, .1); transition: border-color 0.3s ease-in-out, opacity 0.5s ease-in-out; } /* opacity transition追加 */
+#memberImage { display: block; margin: 0 auto 15px auto; max-width: 85%; height: auto; max-height: 45vh; border-radius: 8px; border: 4px solid var(--member-accent-color, #ddd); object-fit: contain; background-color: #f0f0f0; box-shadow: 0 2px 5px rgba(0, 0, 0, .1); transition: border-color 0.3s ease-in-out; }
 #memberImage.image-error { border-color: red !important; content: url(placeholder.png); object-fit: contain; }
 .image-tags-container { margin-top: -5px; margin-bottom: 15px; text-align: center; min-height: 1em; }
 .image-tag-item { display: inline-block; background-color: rgba(0, 0, 0, .05); color: var(--member-text-color, var(--default-text-color)); padding: 2px 7px; border-radius: 10px; font-size: .7em; margin: 2px 3px; opacity: .7; }
-#memberQuote { color: var(--member-quote-color, var(--default-quote-color)); font-style: italic; font-size: 1.1em; margin-bottom: 5px; min-height: 1.6em; /* セリフエリアの最低限の高さを確保 */ }
+#memberQuote { color: var(--member-quote-color, var(--default-quote-color)); font-style: italic; font-size: 1.1em; margin-bottom: 5px; }
 .quote-tags-container { margin-top: 0; margin-bottom: 15px; text-align: center; min-height: 1em; }
 .quote-tag-item { display: inline-block; background-color: rgba(0, 0, 0, .08); color: var(--member-quote-color, var(--default-quote-color)); padding: 2px 7px; border-radius: 10px; font-size: .75em; margin: 2px 3px; font-style: normal; opacity: .8; }
-/* .fortune-result は削除 */
+.fortune-result { font-weight: bold; font-size: 1.2em; color: var(--member-text-color, var(--default-text-color)); min-height: 1.2em; }
 .action-button { padding: 12px 28px; font-size: 1.05em; cursor: pointer; background-color: var(--member-accent-color, var(--default-accent-color)); color: var(--member-button-text, var(--default-button-text)); border: none; border-radius: 6px; transition: background-color .2s, opacity .2s, transform .1s; margin: 5px 8px; font-weight: 500; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); user-select: none; }
 .action-button:disabled { background-color: #ced4da; color: #6c757d; cursor: not-allowed; opacity: .7; box-shadow: none; }
 .action-button:not(:disabled):hover { opacity: .88; }
@@ -285,7 +216,10 @@ input[type=range] { flex-grow: 1; vertical-align: middle; cursor: pointer; heigh
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: var(--member-accent-color, var(--default-accent-color)); border-radius: 50%; cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); transition: background-color .3s ease-in-out; }
 input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var(--member-accent-color, var(--default-accent-color)); border-radius: 50%; cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); transition: background-color .3s ease-in-out; }
 .slider-value { font-weight: bold; margin-left: 12px; min-width: 20px; text-align: right; color: #343a40; font-size: .9em; background-color: #f1f3f5; padding: 2px 6px; border-radius: 4px; }
-/* feature-toggle-group は削除 */
+.feature-toggle-group { border-top: 1px dashed #eee; padding-top: 18px; margin-top: 18px; }
+.feature-toggle-item { display: flex; align-items: center; margin-bottom: 8px; }
+.feature-toggle-item input[type=checkbox] { margin-right: 8px; cursor: pointer; width: 16px; height: 16px; accent-color: var(--member-accent-color, var(--default-accent-color)); }
+.feature-toggle-item label { cursor: pointer; font-size: .95em; color: #495057; user-select: none; }
 .setting-group { margin-bottom: 20px; padding-top: 15px; padding-bottom: 18px; border-top: 1px dashed #eee; }
 #accordionContent > .setting-group:first-child, #accordionContent > .slider-group:first-child { border-top: none; padding-top: 0; }
 .setting-group .slider-group-title { margin-bottom: 8px; }
@@ -305,8 +239,7 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var
 #importTagsButton:disabled { background-color: #ced4da; cursor: not-allowed; opacity: .7; }
 #importStatus { width: 100%; margin-top: 5px !important; margin-bottom: 0 !important; }
 
-/* --- カウンター --- */
-/* (変更なし) */
+/* カウンター */
 #counterSection .counter-instruction { text-align: center; color: #6c757d; margin-bottom: 25px; }
 .counter-controls { text-align: right; margin-bottom: 18px; }
 .counter-mode-button { padding: 7px 15px; border-radius: 5px; cursor: pointer; border: 1px solid #adb5bd; background-color: #f8f9fa; color: #495057; font-size: .9rem; transition: background-color .2s, color .2s, border-color .2s; user-select: none; }
@@ -322,9 +255,15 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var
 .counter-item .counter-member-name { display: block; font-weight: 500; color: var(--member-text-color, var(--default-text-color)); font-size: .9rem; line-height: 1.2; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 90%; pointer-events: none; }
 .count-number { display: block; font-size: 1.4em; font-weight: bold; color: var(--member-accent-color, var(--default-accent-color)); margin-top: 4px; line-height: 1; transition: color .3s ease-in-out; pointer-events: none; }
 
-/* --- イメプレイ --- */
-/* (変更なし) */
-#imepureSection { background-color: var(--imepure-base-bg); padding: 0; overflow: hidden; flex-direction: row; justify-content: space-between; max-width: none; }
+/* イメプレイ */
+#imepureSection {
+    background-color: var(--imepure-base-bg);
+    padding: 0;
+    overflow: hidden;
+    flex-direction: row; /* デフォルトは横並び */
+    justify-content: space-between;
+    max-width: none; /* イメプレイは独自の幅管理 */
+}
 .imepure-main-area { display: flex; flex-direction: column; height: 100%; flex-grow: 1; overflow: hidden; max-width: 700px; margin: 0 auto; border-right: 1px solid #dee2e6; }
 .imepure-header { background-color: #ffffff; border-bottom: 1px solid #e0e0e0; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03); flex-shrink: 0; gap: 10px; }
 .control-group { display: flex; align-items: center; gap: 5px; } .control-group label { font-size: 0.9rem; color: #495057; flex-shrink: 0; white-space: nowrap; } .control-group select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background-color: #fff; cursor: pointer; display: inline-block; height: auto; opacity: 1; visibility: visible; overflow: visible; max-width: 180px; text-overflow: ellipsis; }
@@ -370,75 +309,85 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var
 .progress-tag.sortable-ghost { opacity: 0.4; background-color: #adb5bd; border-style: dashed; }
 
 /* --- ▼▼▼ ステッカー機能スタイル ▼▼▼ --- */
-.sticker-choice-button { width: 50px; height: 50px; padding: 5px; border: 1px solid #ced4da; background-color: #fff; border-radius: 4px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s, border-color 0.2s; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.sticker-choice-button:hover { background-color: #e9ecef; box-shadow: 0 0 0 2px rgba(var(--member-accent-color-rgb, 108, 117, 125), .2); }
-.sticker-choice-button.selected { border-color: var(--member-accent-color, var(--default-accent-color)); box-shadow: 0 0 0 3px rgba(var(--member-accent-color-rgb, 108, 117, 125), .4); }
-.sticker-choice-img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
-#fortuneDisplayArea.sticker-cursor-active { cursor: none; }
-#stickerCursorPreview { position: fixed; width: 50px; height: 50px; pointer-events: none; z-index: 9999; background-size: contain; background-repeat: no-repeat; background-position: center; transform: translate(-50%, -50%); opacity: 0.8; transition: opacity 0.1s ease-out; }
-.pasted-sticker { position: absolute; width: 100px; height: 100px; max-width: 100px; max-height: 100px; object-fit: contain; user-select: none; pointer-events: none; z-index: 10; transform-origin: center center; animation: sticker-float 4s ease-in-out infinite; }
-@keyframes sticker-float { 0% { opacity: 0.6; } 50% { opacity: 1.0; } 100% { opacity: 0.6; } }
+/* #stickerSection の基本スタイルは .fortune-right-column 内で調整済み */
+.sticker-choice-button {
+    width: 50px; /* 候補ボタンサイズ */
+    height: 50px;
+    padding: 5px;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s, border-color 0.2s; /* border-color追加 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.sticker-choice-button:hover {
+    background-color: #e9ecef;
+    box-shadow: 0 0 0 2px rgba(var(--member-accent-color-rgb, 108, 117, 125), .2);
+}
+/* ステッカー選択中のボタンを目立たせるスタイル */
+.sticker-choice-button.selected {
+    border-color: var(--member-accent-color, var(--default-accent-color));
+    box-shadow: 0 0 0 3px rgba(var(--member-accent-color-rgb, 108, 117, 125), .4);
+}
+.sticker-choice-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    pointer-events: none; /* 画像はクリック不可 */
+}
+/* 占い画像エリアにステッカー選択中のカーソルを適用 */
+#fortuneDisplayArea.sticker-cursor-active {
+    cursor: none; /* デフォルトカーソルを隠す */
+}
+/* ステッカー選択中のカスタムカーソル (JSで座標設定) */
+#stickerCursorPreview {
+    position: fixed; /* 画面基準で固定 */
+    width: 50px; /* カーソルプレビューサイズ */
+    height: 50px;
+    pointer-events: none; /* カーソル自体はクリックを阻害しない */
+    z-index: 9999; /* 最前面 */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transform: translate(-50%, -50%); /* マウス位置中心に表示 */
+    opacity: 0.8;
+    transition: opacity 0.1s ease-out; /* マウスリーブ時のフェードアウト用 */
+}
+/* 占い画像エリアに貼り付けられたステッカー */
+.pasted-sticker {
+    position: absolute; /* display-area 基準で絶対配置 */
+    width: 100px; /* 表示サイズ (長辺基準) */
+    height: 100px;
+    max-width: 100px; /* サイズ制限 */
+    max-height: 100px;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none; /* ステッカーはクリックなど不可 */
+    z-index: 10; /* メンバー画像より手前？ */
+    transform-origin: center center; /* 回転中心 */
+    /* filterプロパティはJSで設定 */
+    /* 不透明度アニメーションを追加 */
+    animation: sticker-float 4s ease-in-out infinite;
+}
+
+/* ステッカーの不透明度を変化させるアニメーション */
+@keyframes sticker-float {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1.0;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
 /* --- ▲▲▲ ステッカー機能スタイル ▲▲▲ --- */
-
-/* --- ▼▼▼ しこしこ画像スタイル ▼▼▼ --- */
-/* コンテナで位置と表示を管理 */
-#shikoContainer {
-    position: fixed; /* 画面右下に固定 */
-    bottom: 0px;
-    right: 0px;
-    width: 200px; /* 画像の幅に合わせる */
-    height: auto; /* 高さは成り行き */
-    z-index: 50;
-    opacity: 0; /* 初期非表示 */
-    visibility: hidden; /* 初期非表示 */
-    transition: opacity 0.3s, visibility 0.3s;
-    pointer-events: none;
-}
-#shikoContainer.visible { /* 表示用クラス */
-    visibility: visible;
-    opacity: 0.85;
-}
-
-/* 重ねるためのスタイル */
-#shikoContainer img {
-    position: absolute; /* コンテナ内で絶対配置 */
-    bottom: 0; /* コンテナの下端に合わせる */
-    left: 0;   /* コンテナの左端に合わせる */
-    width: 100%; /* コンテナの幅に合わせる */
-    height: auto;
-}
-
-/* しこしこ画像 (動く方) */
-#shikoshikoImage {
-    /* position, bottom, left, width, height は #shikoContainer img から継承 */
-    transform-origin: bottom center; /* アニメーションの基点 */
-    z-index: 51; /* 竿より手前に表示 */
-    /* animation プロパティはクラスで付与 */
-}
-
-/* 竿画像 (動かない方) */
-#saoImage {
-    /* position, bottom, left, width, height は #shikoContainer img から継承 */
-    z-index: 50; /* しこしこ画像より後ろ */
-    /* アニメーションなし */
-}
-
-
-/* 速度段階ごとのアニメーションクラス (しこしこ画像に適用) */
-#shikoshikoImage.speed-0 { animation: shiko-shiko-anim 1.000s infinite ease-in-out; } /* Level 0 -> 60 BPM */
-#shikoshikoImage.speed-1 { animation: shiko-shiko-anim 0.667s infinite ease-in-out; } /* Level 1 -> 90 BPM */
-#shikoshikoImage.speed-2 { animation: shiko-shiko-anim 0.500s infinite ease-in-out; } /* Level 2 -> 120 BPM */
-#shikoshikoImage.speed-3 { animation: shiko-shiko-anim 0.375s infinite ease-in-out; } /* Level 3 -> 160 BPM */
-#shikoshikoImage.speed-4 { animation: shiko-shiko-anim 0.250s infinite ease-in-out; } /* Level 4 -> 240 BPM */
-
-/* キーフレーム (変更なし) */
-@keyframes shiko-shiko-anim {
-    0%, 100% { transform: translateY(0); }
-    10%, 90% { transform: translateY(20); }
-    50%      { transform: translateY(80px); }
-}
-/* --- ▲▲▲ しこしこ画像スタイル ▲▲▲ --- */
-
 
 /* --- ギャラリー機能のスタイル --- */
 #gallerySection h1 { text-align: center; color: var(--default-text-color); margin-top: 0; margin-bottom: 25px; font-size: 1.6rem; font-weight: 600; flex-shrink: 0; }
@@ -446,67 +395,114 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var
 #galleryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; } .gallery-loading { grid-column: 1 / -1; text-align: center; color: #6c757d; padding: 40px 0; } .gallery-item { border: 1px solid #eee; border-radius: 6px; overflow: hidden; background-color: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; } .gallery-thumbnail { width: 100%; height: 130px; object-fit: cover; display: block; cursor: pointer; transition: opacity 0.2s; } .gallery-thumbnail:hover { opacity: 0.85; } .gallery-item-info { padding: 8px; font-size: 0.8rem; text-align: center; color: #495057; border-top: 1px solid #eee; margin-top: auto; } .gallery-item-info .gallery-item-name { font-weight: bold; display: block; margin-bottom: 3px; } .gallery-item-info .gallery-item-path { font-size: 0.7rem; color: #adb5bd; word-break: break-all; } .gallery-item .weak-point-toggle { position: absolute; top: 5px; right: 5px; background-color: rgba(255, 255, 255, 0.7); border-radius: 50%; width: 28px; height: 28px; font-size: 1rem; padding: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); } .gallery-item .weak-point-toggle.is-weak { color: #ffc107; background-color: rgba(255, 255, 255, 0.8); }
 
 /* --- 設定モーダル --- */
-/* (変更なし) */
 .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,.6);animation:modalFadeIn .2s ease-out;} @keyframes modalFadeIn{from{opacity:0}to{opacity:1}} .modal-content{background-color:#fefefe;margin:8% auto;padding:25px 30px;border:none;width:90%;max-width:650px;border-radius:10px;position:relative;box-shadow:0 5px 15px rgba(0,0,0,.2);animation:modalSlideIn .3s ease-out;} @keyframes modalSlideIn{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}} .close-button{color:#aaa;position:absolute;top:15px;right:20px;font-size:32px;font-weight:bold;cursor:pointer;line-height:1;transition:color .2s;user-select:none;} .close-button:hover{color:#555;} .modal-content h2{margin-top:0;margin-bottom:25px;text-align:center;color:#343a40;font-weight:600;} .modal-body .setting-group{margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #eee;} .modal-body .setting-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;} .modal-body .setting-group h4,.modal-body .setting-group h5{font-size:1rem;color:var(--member-accent-color,#555);margin-top:0;margin-bottom:15px;border-left:3px solid var(--member-accent-color,#ccc);padding-left:8px;} .modal-body .setting-group h5{font-size:.95rem;margin-bottom:10px;} .modal-body .setting-item{margin-bottom:12px;display:flex;align-items:flex-start;} .modal-body label{width:150px;font-size:.9rem;color:#495057;margin-top:8px;flex-shrink:0;padding-right:10px;} .modal-body input[type=text],.modal-body input[type=number],.modal-body textarea{flex-grow:1;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:.95rem;box-sizing:border-box;transition:border-color .2s;} .modal-body input[type=text]:focus,.modal-body input[type=number]:focus,.modal-body textarea:focus{border-color:var(--member-accent-color,#888);outline:none;box-shadow:0 0 0 2px rgba(var(--member-accent-color-rgb,108,117,125),.2);} .modal-body textarea{min-height:60px;resize:vertical;line-height:1.5;} .modal-body input#modalHeartEmoji{width:50px;text-align:center;font-size:1.2em;flex-grow:0;} .modal-body input#modalCharacterAge,.modal-body input#playerInfoAge{width:80px;flex-grow:0;} .modal-footer{text-align:right;margin-top:25px;padding-top:20px;border-top:1px solid #eee;} .modal-footer button{padding:10px 20px;font-size:1rem;} .player-info-group h4{color:#495057;border-left-color:#6c757d;}
 
 /* --- その他UI要素 --- */
-/* (変更なし) */
 #ejaculationNotification{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(15px);background-color:rgba(255,105,180,.9);color:#fff;padding:15px 25px;border-radius:20px;z-index:2000;opacity:0;visibility:hidden;transition:opacity .4s ease-out,visibility .4s,transform .4s ease-out;font-size:1.1em;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap;pointer-events:none;} #ejaculationNotification.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
-/* HPバーは削除されたのでスタイルも不要 */
-/* .hp-bar-container{...} */
-/* body.fortune-active:not(.no-pulse){animation:pulse var(--pulse-duration,2s) infinite ease-in-out;} */ /* しこしこモードでは背景点滅不要かも */
+.hp-bar-container{background-color:#e0e0e0;border-radius:5px;padding:3px;margin:10px auto 0 auto;box-shadow:inset 0 1px 2px rgba(0,0,0,.1);max-width:300px;border:1px solid #ccc;flex-shrink:0;} .hp-bar-label{font-size:.8em;text-align:center;margin-bottom:3px;color:#555;} .hp-bar-label span{font-weight:bold;color:var(--member-accent-color,var(--default-accent-color));} .hp-bar-outer{background-color:#d3d3d3;border-radius:3px;height:15px;overflow:hidden;} .hp-bar-inner{background-color:#4CAF50;height:100%;width:0%;border-radius:3px;transition:width .2s ease-out;}
+@keyframes pulse{0%{background-color:var(--member-main-bg)}50%{background-color:hsla(var(--pulse-hue,0),var(--pulse-sat,0%),var(--pulse-light,80%),calc((var(--pulse-brightness-factor,1.3)-1)*.7+1))}100%{background-color:var(--member-main-bg)}} body.fortune-active:not(.no-pulse){animation:pulse var(--pulse-duration,2s) infinite ease-in-out;}
 .error-message{color:red;font-weight:bold;text-align:center;padding:10px;border:1px solid red;background-color:#ffe0e0;border-radius:5px;margin:15px;}
 
 /* --- タグ設定モードUI --- */
-/* (変更なし) */
-#taggingModeSection { border-top:2px solid var(--member-accent-color,var(--default-accent-color)); margin: 30px auto 20px auto; padding:20px; background-color:#fff; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,.1); max-width: 700px; box-sizing: border-box; display: none; }
+#taggingModeSection {
+    border-top:2px solid var(--member-accent-color,var(--default-accent-color));
+    margin: 30px auto 20px auto; /* 上下にマージン、中央寄せ */
+    padding:20px;
+    background-color:#fff;
+    border-radius:8px;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+    max-width: 700px; /* 幅制限 */
+    box-sizing: border-box;
+    display: none; /* 初期非表示 */
+}
 #taggingModeSection h2{text-align:center;color:var(--member-accent-color,var(--default-text-color));margin-bottom:20px;font-size:1.4rem;} #taggingImageContainer{text-align:center;margin-bottom:20px;} #taggingImage{display:block;max-width:100%;height:auto;max-height:60vh;object-fit:contain;margin:10px auto 15px auto;border:1px solid #ddd;background-color:#f8f9fa;border-radius:4px;} #taggingImageInfo{font-size:.9em;color:#6c757d;margin-bottom:15px;} #taggingControls{padding:0;} .tag-input-area{margin-bottom:20px;} .tag-input-area label{display:block;margin-bottom:8px;font-weight:500;color:#495057;font-size:.95rem;} .tag-input-area input[type=text]{width:100%;padding:10px;border:1px solid #ced4da;border-radius:4px;font-size:.95rem;box-sizing:border-box;margin-bottom:15px;} .tag-input-area input[type=text]:focus{border-color:var(--member-accent-color,#888);outline:none;box-shadow:0 0 0 2px rgba(var(--member-accent-color-rgb,108,117,125),.2);} #suggestedTagsContainer{border:1px solid #eee;padding:15px;border-radius:5px;background-color:#f8f9fa;margin-bottom:15px;max-height:300px;overflow-y:auto;} .tag-category{margin-bottom:15px;} .tag-category:last-child{margin-bottom:0;} .tag-category-header{font-size:.9rem;font-weight:600;color:#555;margin-top:0;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #e0e0e0;} .tag-buttons-container{display:flex;flex-wrap:wrap;gap:8px;} .suggested-tag-button{padding:5px 10px;font-size:.85em;cursor:pointer;border:1px solid #adb5bd;background-color:#fff;border-radius:15px;color:#495057;transition:background-color .2s,color .2s,border-color .2s,box-shadow .1s;box-shadow:0 1px 1px rgba(0,0,0,.05);user-select:none;} .suggested-tag-button:hover:not(.selected){background-color:#e9ecef;border-color:#6c757d;} .suggested-tag-button:active:not(.selected){background-color:#ced4da;box-shadow:inset 0 1px 2px rgba(0,0,0,.1);} .suggested-tag-button.selected{background-color:var(--member-accent-color,var(--default-accent-color));color:var(--member-button-text,#fff);border-color:transparent;font-weight:bold;box-shadow:none;} .suggested-tag-button.selected:hover{opacity:.9;} #currentTagsContainer{margin-bottom:20px;font-size:.9rem;color:#495057;min-height:1.2em;} #currentTagsDisplay{display:inline-block;margin-left:5px;min-height:1.2em;} .tag-item{display:inline-block;background-color:#e9ecef;color:#495057;padding:3px 8px;border-radius:10px;font-size:.85em;margin-right:5px;margin-bottom:5px;} .tag-navigation{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px;flex-wrap:wrap;} #taggingProgress{text-align:center;font-size:.9em;color:#6c757d;margin-bottom:15px;} .tag-mode-exit-area{text-align:center;margin-top:15px;padding-bottom:20px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;}
 
 /* --- レスポンシブ対応 --- */
 /* タブレット幅程度でレイアウト変更 */
 @media (max-width: 992px) {
-    /* 時間バーの左右パディング調整 */
-    #remainingTimeBarContainer { padding: 10px 15px; }
-    /* ラッパー調整 */
-    .fortune-wrapper { flex-direction: column; max-width: 700px; padding: 15px; gap: 15px; width: 100%; margin: 0; margin-top: 45px; /* 時間バー分確保 */ }
-    .fortune-left-column, .fortune-center-column, .fortune-right-column { flex: 1 1 100%; width: 100%; position: static; max-height: none; overflow-y: visible; padding-bottom: 0; top: auto; /* sticky解除 */ }
-    .fortune-center-column h1 { margin-bottom: 15px; }
-    .fortune-center-column .display-area { margin-bottom: 15px; padding: 15px; }
-    .fortune-right-column { order: 3; }
-    .fortune-left-column { order: 1; }
-    .fortune-center-column { order: 2; }
-    .fortune-right-column #stickerSection { margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0; }
-    .fortune-right-column #stickerChoiceContainer { max-height: 150px; }
-    .tab-container { max-width: 100%; border-radius: 0; }
-    #taggingModeSection { max-width: 100%; margin: 20px 0; border-radius: 0; }
-    /* スティッキー解除に伴い、アコーディオンの高さ制限解除 */
-    .fortune-left-column .member-selection-accordion .accordion-content.open { max-height: 60vh; } /* 元の高さに戻す */
-    /* しこしこ画像の位置調整 */
-    #shikoshikoImage { width: 60px; bottom: 10px; right: 10px; }
+    .fortune-wrapper {
+        flex-direction: column; /* 縦並びにする */
+        max-width: 700px; /* スマホ表示に近い幅に戻す */
+        padding: 15px; /* スマホ用パディング */
+        gap: 15px; /* 縦方向の隙間 */
+        width: 100%; /* #fortuneSection の幅に合わせる */
+        margin: 0; /* 中央寄せ解除 */
+    }
+    .fortune-left-column,
+    .fortune-center-column,
+    .fortune-right-column {
+        flex: 1 1 100%; /* 全幅にする */
+        width: 100%;
+        position: static; /* sticky解除 */
+        max-height: none; /* 高さ制限解除 */
+        overflow-y: visible; /* スクロール解除 */
+        padding-bottom: 0;
+    }
+    .fortune-center-column h1 {
+        margin-bottom: 15px;
+    }
+    .fortune-center-column .display-area {
+        margin-bottom: 15px;
+        padding: 15px; /* スマホ用padding */
+    }
+    /* 右カラム（ステッカー）を中央カラムの下に配置 */
+    .fortune-right-column {
+        order: 3; /* 配置順序を変更 */
+    }
+    .fortune-left-column {
+        order: 1;
+    }
+    .fortune-center-column {
+        order: 2;
+    }
+     /* 右カラム内のステッカーセクションの上部境界線を再表示 */
+    .fortune-right-column #stickerSection {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+    .fortune-right-column #stickerChoiceContainer {
+        max-height: 150px; /* スマホレイアウト時の高さ */
+    }
+    /* タブコンテナも中央寄せ解除 */
+    .tab-container {
+        max-width: 100%;
+        border-radius: 0;
+    }
+    /* タグ付けモードも幅を100%に */
+    #taggingModeSection {
+        max-width: 100%;
+        margin: 20px 0;
+        border-radius: 0;
+    }
 }
 
-/* スマホ幅の調整 */
+/* スマホ幅の調整 (既存のものをマージ) */
 @media (max-width: 768px) {
-    /* 992px以下のスタイル継承 */
-    .fortune-wrapper { padding: 15px; }
+    /* 992px以下で既に縦並びになっているので、ここでは微調整 */
+    .fortune-wrapper {
+        padding: 15px; /* パディング再確認 */
+    }
+    /* 既存のスマホ用スタイル */
     #imepureSection { flex-direction: column; }
     .imepure-main-area { max-width: 100%; border-right: none; border-bottom: 1px solid #dee2e6; height: 65vh; }
     .imepure-progress-tag-area { width: 100%; height: 35vh; border-left: none; flex-direction: row; }
     #imepureTimelineArea { border-right: 1px solid #e9ecef; border-bottom: none; }
+    #imepureTagChoiceArea { /* ステッカーエリアができるので高さ調整が必要な場合がある */ }
     .trash-area { padding: 10px; font-size: 0.8rem; } .trash-icon { font-size: 1.2rem; }
     h1{font-size:1.4rem;} .tab-button{font-size:.9rem;padding:10px 12px;}
+    /* counter, gallery は padding, max-width を適用 */
     #counterSection, #gallerySection { padding:15px; max-width: 100%; }
-    /* しこしこモード内の要素 */
-    .fortune-center-column .display-area{padding:15px;}
-    #memberName{font-size:1.5em;} #memberQuote{font-size:1em;}
-    #memberImage { max-height: 45vh; } /* スマホでは高さを少し抑える */
+    /* fortuneSection の内部要素の調整 */
+    .fortune-center-column .display-area{padding:15px;} /* display-areaへの適用を明確化 */
+    #memberName{font-size:1.5em;} #memberQuote{font-size:1em;} .fortune-result{font-size:1.1em;}
     .action-button{padding:10px 20px;font-size:1em;margin:5px;} .action-button.small{padding:6px 12px;font-size:.85rem;}
+    /* 左カラムの設定内スライダー */
     .fortune-left-column .slider-container.member-sliders{grid-template-columns:1fr;gap: 10px;}
     .fortune-left-column .member-slider-item,.fortune-left-column .effect-slider-item{flex-direction:column;align-items:stretch;margin-bottom: 15px;}
     .fortune-left-column .member-slider-item label,.fortune-left-column .effect-slider-item label{width:100%;text-align:left;margin-bottom:5px;margin-right: 0;}
     .fortune-left-column input[type=range]{margin-top:0;width: 100%;}
     .fortune-left-column .slider-value{margin-left:0;margin-top:5px;text-align:center;width: auto;align-self: flex-end;}
-    .fortune-left-column .duration-setting-item input[type=number] { max-width: none; } /* スマホでは数値入力幅制限解除 */
 
     .counter-grid{grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));gap:10px;max-width:100%;} .counter-item{padding:10px 5px;} .counter-item img{width:50%;max-width:50px;max-height:50px;} .counter-item .counter-member-name{font-size:.75rem;} .count-number{font-size:1.1em;}
     .imepure-header{padding: 8px 10px;gap: 5px;flex-wrap: nowrap;overflow: hidden;} .control-group label {display: none;} .control-group select {font-size: 0.85rem;flex-grow: 1;min-width: 70px;max-width: 50%;} .character-select-group { order: 1; } .situation-select-group { order: 2; } .icon-button { order: 3; width:32px; height:32px; font-size:1.2rem; flex-shrink: 0; }
@@ -519,16 +515,15 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var
     #imepureSendButton.send-button {width:34px;height:34px;font-size:1.2rem;}
     .modal-content{width:95%;margin:5% auto;padding:20px;} .modal-body .setting-item{flex-direction:column;align-items:stretch;} .modal-body label{width:100%;margin-bottom:5px;margin-top:0;text-align:left;} .modal-body input[type=text],.modal-body input[type=number],.modal-body textarea{width:100%;box-sizing:border-box;} .modal-body input#modalHeartEmoji,.modal-body input#modalCharacterAge,.modal-body input#playerInfoAge{width:100%;}
     .tag-navigation{justify-content:center;} .tag-mode-exit-area{justify-content:center;}
+    /* タグインポート/エクスポートを左カラム内に適用 */
     .fortune-left-column .tag-import-export-area{flex-direction:column;align-items:stretch;gap:15px;}
     .fortune-left-column .tag-import-export-area label,.fortune-left-column .tag-import-export-area button{width:100%;text-align:center;margin:0!important;}
 
     .gallery-controls { flex-direction: column; align-items: stretch; gap: 10px; } #galleryRefreshButton { margin-left: 0; }
     #galleryGrid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;} .gallery-thumbnail { height: 110px; }
     /* スマホ表示時のステッカーエリア */
-    .fortune-right-column #stickerSection { margin-top: 15px; padding-top: 10px; border-top: 1px solid #e0e0e0; }
-    .fortune-right-column #stickerChoiceContainer { max-height: 100px; }
+    .fortune-right-column #stickerSection { margin-top: 15px; padding-top: 10px; border-top: 1px solid #e0e0e0; /* 境界線再表示 */ }
+    .fortune-right-column #stickerChoiceContainer { max-height: 100px; /* スマホでは高さを少し制限 */ }
     .sticker-choice-button { width: 45px; height: 45px; }
     .pasted-sticker { width: 80px; height: 80px; max-width: 80px; max-height: 80px; }
-    /* しこしこ画像 スマホ */
-    #shikoshikoImage { width: 50px; bottom: 5px; right: 5px; }
 }

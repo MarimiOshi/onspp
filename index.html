@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONSP Project (しこしこモード)</title>
+    <title>ONSP Project (仮)</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="placeholder.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
@@ -11,90 +11,79 @@
 <body>
 
     <div class="tab-container">
-        <button class="tab-button active" data-tab-target="#fortuneSection">しこしこモード</button>
+        <button class="tab-button active" data-tab-target="#fortuneSection">占い</button>
         <button class="tab-button" data-tab-target="#counterSection">カウンター</button>
         <button class="tab-button" data-tab-target="#imepureSection">イメプレイ</button>
         <button class="tab-button" data-tab-target="#gallerySection">ギャラリー</button>
     </div>
 
-    <!-- しこしこモードセクション -->
+    <!-- 占いセクション -->
     <div class="tab-content active" id="fortuneSection">
-
-        <!-- 残り時間バー -->
-        <div id="remainingTimeBarContainer" style="display: none;">
-            <div class="time-bar-label">残り時間: <span id="remainingTimeLabel">--:--</span></div>
-            <progress id="remainingTimeBar" max="100" value="100"></progress>
-        </div>
-
+        <!-- ▼▼▼ 3カラムレイアウト用ラッパー ▼▼▼ -->
         <div class="fortune-wrapper">
 
-            <!-- 左カラム: 設定 -->
+            <!-- ▼▼▼ 左カラム: 設定 ▼▼▼ -->
             <div class="fortune-left-column">
                 <div class="member-selection-accordion">
                     <button class="accordion-toggle" id="accordionToggle" aria-expanded="false"> 設定 <span class="toggle-icon">▼</span> </button>
                     <div class="accordion-content" id="accordionContent">
+                        <!-- 設定内容は変更なし -->
                         <div class="slider-group"> <h4 class="slider-group-title">メンバー出現率</h4> <div class="slider-container member-sliders"> <p id="memberSliderPlaceholder">メンバー読み込み中...</p> </div> <p class="selection-note">数値が高いほど出やすくなります(0は出ません)</p> </div>
                         <div class="slider-group"> <h4 class="slider-group-title">エフェクト設定</h4> <div class="effect-slider-item"> <label for="pulseBrightnessSlider">背景の明るさ:</label> <input type="range" id="pulseBrightnessSlider" min="0" max="5" step="1" value="3"> <span class="slider-value" id="pulseBrightnessValue">3</span> </div> </div>
-                        <div class="setting-group game-duration-group">
-                            <h4 class="slider-group-title">持続時間設定</h4>
-                            <div class="duration-setting-item">
-                                <label for="gameDurationMinutes">時間:</label>
-                                <input type="number" id="gameDurationMinutes" value="3" min="0" step="1" style="max-width: 60px;">
-                                <span>分</span>
-                                <input type="number" id="gameDurationSeconds" value="0" min="0" max="59" step="5" style="max-width: 60px;">
-                                <span>秒</span>
-                            </div>
-                             <p class="feature-note">ゲームの持続時間を設定します (最低30秒)。</p>
-                        </div>
+                        <div class="setting-group feature-toggle-group"> <h4 class="slider-group-title">機能ON/OFF</h4> <div class="feature-toggle-item"> <input type="checkbox" id="spacebarFeatureToggle"> <label for="spacebarFeatureToggle">スペース連打で次へ</label> </div> <p class="feature-note">ONの場合、占い結果に応じてスペース連打が必要になります。(Enterでスキップ)</p> </div>
                         <div class="setting-group tag-filter-group"> <h4 class="slider-group-title">画像タグフィルター</h4> <div class="tag-filter-options"> <label>検索モード:</label> <div class="radio-group"> <input type="radio" id="tagSearchAnd" name="tagSearchMode" value="AND" checked> <label for="tagSearchAnd">AND (全て含む)</label> <input type="radio" id="tagSearchOr" name="tagSearchMode" value="OR"> <label for="tagSearchOr">OR (いずれか含む)</label> </div> </div> <div class="tag-filter-selection"> <label>フィルタータグ選択:</label> <div id="tagFilterButtonsContainer"> <p class="no-tags-message">利用可能なタグがありません</p> </div> <p id="tagFilterStatus">フィルター未適用</p> <button id="clearTagFilterButton" class="action-button small secondary">選択解除</button> </div> </div>
                         <div class="setting-group tag-setting-control"> <h4 class="slider-group-title">画像タグ設定・管理</h4> <button id="startTaggingButton" class="action-button small">タグ付けモード開始</button> <div class="tag-import-export-area"> <label for="importTagFile" class="action-button small secondary">タグ読込(JSON)</label> <input type="file" id="importTagFile" accept=".json" style="display: none;"> <button id="importTagsButton" class="action-button small" disabled>インポート実行</button> <button id="exportTagsButton" class="action-button small secondary">タグ書出(JSON)</button> <p id="importStatus" class="feature-note" style="width: 100%; margin-top: 5px;">JSONファイルを選択</p> </div> </div>
                     </div>
                 </div>
             </div>
+            <!-- ▲▲▲ 左カラム: 設定 ▲▲▲ -->
 
-            <!-- 中央カラム: 表示 -->
+
+            <!-- ▼▼▼ 中央カラム: 占い表示 ▼▼▼ -->
             <div class="fortune-center-column">
-                <h1>しこしこモード</h1>
+                <h1>今日の運勢は？</h1>
                 <div class="display-area" id="fortuneDisplayArea">
+                    <!-- 表示エリア内容は変更なし -->
                     <div class="fortune-header"> <h2 id="memberName">メンバー名</h2> <button class="weak-point-toggle icon-button" id="fortuneWeakPointButton" title="弱点登録/解除" data-relpath="" style="display: none;">☆</button> </div>
                     <img id="memberImage" src="placeholder.png" alt="メンバー画像">
                     <div class="image-tags-container" id="imageTagsContainer" style="display: none;"></div>
                     <p id="memberQuote">ここにセリフが表示されます</p>
                     <div class="quote-tags-container" id="quoteTagsContainer" style="display: none;"></div>
+                    <p class="fortune-result" id="fortuneResult">ここに結果が表示されます</p>
+                    <div class="hp-bar-container" id="hpBarContainer" style="display: none;"> <div class="hp-bar-label"><span id="hpCount">0</span> / <span id="hpTotal">0</span> Hit!</div> <div class="hp-bar-outer"> <div class="hp-bar-inner" id="hpBarInner" style="width: 0%;"></div> </div> </div>
                      <!-- 貼り付けられたステッカーはこのエリアに絶対配置される -->
                 </div>
                 <div class="button-area">
-                    <button id="startGameButton" class="action-button primary">開始</button>
-                    <button id="finishButton" class="action-button secondary" disabled>フィニッシュ</button>
+                    <button id="fortuneButton" class="action-button primary" disabled>占う (Space)</button>
+                    <button id="ejaculateButton" class="action-button secondary" disabled>発射</button>
                 </div>
             </div>
+            <!-- ▲▲▲ 中央カラム: 占い表示 ▲▲▲ -->
 
-            <!-- 右カラム: ステッカー -->
+
+            <!-- ▼▼▼ 右カラム: ステッカー ▼▼▼ -->
             <div class="fortune-right-column">
                 <div id="stickerSection">
                     <h4>ステッカーを貼る</h4>
                     <div id="stickerChoiceContainer">
                         <p class="sticker-loading">ステッカー読込中...</p>
+                        <!-- ステッカー候補ボタンはJSで生成 -->
                     </div>
+                    <!-- ステッカー削除ボタンを追加 -->
                      <button id="clearAllStickersButton" class="action-button small secondary" style="margin-top: 15px; width: 100%;">全ステッカー削除</button>
                 </div>
             </div>
+            <!-- ▲▲▲ 右カラム: ステッカー ▲▲▲ -->
 
         </div>
+        <!-- ▲▲▲ 3カラムレイアウト用ラッパー ▲▲▲ -->
 
-        <!-- タグ付けモード -->
+        <!-- タグ付けモード (レイアウトラッパーの外に配置) -->
         <div id="taggingModeSection" style="display: none;">
             <h2>画像タグ設定</h2>
+            <!-- タグ付けモードの内容は変更なし -->
             <div id="taggingImageContainer"> <img id="taggingImage" src="placeholder.png" alt="タグ付け対象画像"> <p id="taggingImageInfo">ファイル情報</p> </div> <div id="taggingControls"> <div class="tag-input-area"> <label for="tagInput">現在のタグ (カンマ区切り):</label> <input type="text" id="tagInput" placeholder="例: 笑顔, 私服, 自撮り"> <label>タグ候補:</label> <div id="suggestedTagsContainer"></div> <div id="currentTagsContainer"> <label>選択中のタグ:</label> <span id="currentTagsDisplay">なし</span> </div> </div> <div class="tag-navigation"> <button id="prevTagImageButton" class="action-button small secondary">← 前へ</button> <button id="saveTagsButton" class="action-button primary">保存して次へ (Enter)</button> <button id="skipTagImageButton" class="action-button secondary">スキップ</button> <button id="nextTagImageButton" class="action-button small secondary">次へ →</button> </div> </div> <p id="taggingProgress">進捗: 1/X</p> <div class="tag-mode-exit-area"> <button id="exitTaggingButton" class="action-button secondary">タグ設定モード終了 (Esc)</button> </div>
         </div>
-
-        <!-- ▼▼▼ しこしこ画像コンテナ ▼▼▼ -->
-        <div id="shikoContainer" style="display: none;">
-            <img id="saoImage" src="images/竿.png" alt="竿">
-            <img id="shikoshikoImage" src="images/しこしこ.png" alt="しこしこアニメーション"> <!-- ファイル名変更 -->
-        </div>
-        <!-- ▲▲▲ しこしこ画像コンテナ ▲▲▲ -->
-
     </div> <!-- #fortuneSection 終了 -->
 
     <!-- カウンターセクション -->
@@ -215,17 +204,17 @@
         </div>
     </div>
 
-    <!-- ステッカーカーソル用プレビュー要素 -->
+    <!-- ▼▼▼ ステッカーカーソル用プレビュー要素 ▼▼▼ -->
     <div id="stickerCursorPreview" style="display: none;"></div>
 
-    <!-- JavaScript読み込み -->
+    <!-- JavaScript読み込み (順番重要!) -->
     <script src="config.js"></script>
     <script src="config_secret.js"></script>
     <script src="js/feature_counter.js"></script>
-    <!-- <script src="js/feature_spacebar.js"></script> -->
+    <script src="js/feature_spacebar.js"></script>
     <script src="js/feature_imepure.js"></script>
     <script src="js/feature_metronome.js"></script>
-    <script src="js/base.js"></script>
+    <script src="js/base.js"></script> <!-- base.js は最後に -->
 
 </body>
 </html>

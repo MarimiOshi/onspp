@@ -1,243 +1,212 @@
-// js/feature_metronome.js (v1.1 - WAV Playback & BPM Control)
+// ==================================================================
+// feature_metronome.js - しこしこメトロノーム機能 (ランダム音源・速度調整版)
+// ==================================================================
 
-window.metronomeModule = (() => {
+window.metronomeModule = (function() {
+    'use strict';
+
     // --- 定数 ---
-    const LOOKAHEAD = 25.0;         // スケジューラー呼び出し頻度(ms)
-    const SCHEDULE_AHEAD_TIME = 0.1; // 音をスケジュールする未来の時間(s)
-    const DEFAULT_BPM = 60.0;       // デフォルトBPM
-    const MIN_BPM = 30.0;           // 最小BPM
-    const MAX_BPM = 300.0;          // 最大BPM (必要に応じて調整)
-    const SOUND_FILE_PATH = 'sounds/'; // 音源ファイルのパス
-    const NUM_SOUND_FILES = 8;       // 音源ファイルの数 (1.wav ~ 8.wav)
+    // ★★★ 5種類の音源ファイルパスを配列で定義 ★★★
+    const SOUND_FILE_PATHS = [
+        'sounds/click1.wav',
+        'sounds/click2.wav',
+        'sounds/click3.wav',
+        'sounds/click4.wav',
+        'sounds/click5.wav',
+        'sounds/click6.wav',
+        'sounds/click7.wav',
+        'sounds/click8.wav',
+        // 必要に応じてファイルパスを追加・変更してください
+    ];
+    const DEBUG_MODE = false;
 
     // --- 状態変数 ---
     let audioContext = null;
-    let isRunning = false;
-    let currentBpm = DEFAULT_BPM;   // ★ 現在のBPMを保持
-    let nextNoteTime = 0.0;       // 次の音のスケジュール時刻
-    let schedulerTimerID = null;  // スケジューラーのタイマーID
-    let soundBuffers = [];        // デコード済み音声バッファをキャッシュ
-    let soundsLoaded = false;     // 音声ロード完了フラグ
-
-    // --- デバッグ用フラグ ---
-    const DEBUG_METRONOME = false; // メトロノーム関連のログ出力
-
-    // --- 音声ファイルの読み込みとデコード ---
-    async function loadSound(url) {
-        if (!audioContext) {
-            console.error("AudioContext not initialized. Cannot load sound.");
-            return null;
-        }
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status} for ${url}`);
-            }
-            const arrayBuffer = await response.arrayBuffer();
-            // decodeAudioData を使用
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            return audioBuffer;
-        } catch (error) {
-            console.error(`Error loading or decoding sound: ${url}`, error);
-            return null;
-        }
-    }
-
-    // すべての音声ファイルを事前に読み込む
-    async function loadAllSounds() {
-        if (!audioContext) return false;
-        if (soundsLoaded) return true; // 既にロード済みなら何もしない
-
-        console.log("Loading metronome sounds...");
-        soundBuffers = []; // キャッシュをクリア
-        const loadPromises = [];
-        for (let i = 1; i <= NUM_SOUND_FILES; i++) {
-            const url = `${SOUND_FILE_PATH}${i}.wav`;
-            loadPromises.push(loadSound(url));
-        }
-        try {
-            const buffers = await Promise.all(loadPromises);
-            soundBuffers = buffers.filter(buffer => buffer !== null);
-            if (soundBuffers.length === 0) {
-                console.error("Failed to load any metronome sounds. Metronome will be silent.");
-                soundsLoaded = false;
-                return false;
-            }
-            console.log(`Successfully loaded ${soundBuffers.length} metronome sounds.`);
-            soundsLoaded = true;
-            return true;
-        } catch (error) {
-            console.error("Error loading metronome sounds:", error);
-            soundsLoaded = false;
-            return false;
-        }
-    }
-
+    // ★★★ デコードされた音源バッファを配列で保持 ★★★
+    let soundBuffers = [];
+    let soundsLoadedCount = 0; // 読み込み完了した音源の数
+    let allSoundsLoaded = false; // 全ての音源読み込み完了フラグ
+    let schedulerId = null;
+    let currentSpeed = 0;
+    let intervalMs = Infinity;
 
     // --- 初期化 ---
-    async function initialize() {
-        console.log("Initializing Metronome module...");
+    function initialize() {
+        console.log("Initializing Metronome Module (Random Sounds & Faster Tempo)...");
         try {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!window.AudioContext) {
-                console.error("Web Audio API is not supported.");
+            if (window.AudioContext) {
+                audioContext = new AudioContext();
+            } else {
+                console.error("Web Audio API is not supported. Metronome disabled.");
                 return false;
             }
-            if (!audioContext) {
-                audioContext = new AudioContext();
-                if (DEBUG_METRONOME) console.log("AudioContext initialized.");
-                // アプリ初期化時に音声を非同期でロード開始
-                await loadAllSounds();
-            } else if (!soundsLoaded) {
-                // AudioContextは存在するがサウンドが未ロードの場合 (resume後など)
-                await loadAllSounds();
-            }
+            // ★★★ 全ての音源読み込みを開始 ★★★
+            loadAllSounds();
+
+            console.log("--- Metronome Module Initialized ---");
             return true;
-        } catch (e) {
-            console.error("Error initializing AudioContext:", e);
+        } catch (error) {
+            console.error("Metronome initialization failed:", error);
             audioContext = null;
             return false;
         }
     }
 
-
-    // --- ユーザー操作による再開 ---
-    function resumeAudioContextIfNeeded() {
+    // ユーザーインタラクション後に AudioContext を再開
+    function resumeAudioContext() {
         if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume().then(async () => { // async追加
-                if (DEBUG_METRONOME) console.log('AudioContext resumed successfully.');
-                // 再開後に音がロードされていない場合はロード試行
-                if (!soundsLoaded) {
-                    await loadAllSounds(); // await追加
-                }
+            audioContext.resume().then(() => {
+                // console.log('AudioContext resumed.'); // デバッグ時以外は不要かも
             }).catch(e => {
                 console.error('Error resuming AudioContext:', e);
             });
         }
-         // まだロード中or失敗していたらロード試行
-         else if (audioContext && !soundsLoaded) {
-            loadAllSounds(); // 非同期でロード開始 (await不要)
-         }
     }
 
-
-    // --- BPM 設定・取得 ---
-    function setBpm(newBpm) {
-        if (typeof newBpm !== 'number' || isNaN(newBpm)) {
-             console.warn(`Invalid BPM value type: ${newBpm}`);
-             return;
-         }
-        currentBpm = Math.max(MIN_BPM, Math.min(MAX_BPM, newBpm));
-        if (DEBUG_METRONOME) {
-             // 頻繁にログが出ないように、変更があった時だけ出すなどの工夫も可能
-             // console.log(`Metronome BPM set to: ${currentBpm.toFixed(1)}`);
+    // ★★★ 指定されたパスの音源を読み込みデコードする非同期関数 ★★★
+    async function loadSound(filePath) {
+        if (!audioContext) return null; // AudioContext がなければ失敗
+        try {
+            if (DEBUG_MODE) console.log(`Loading sound: ${filePath}`);
+            const response = await fetch(filePath);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
+            const arrayBuffer = await response.arrayBuffer();
+            const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
+             if (DEBUG_MODE) console.log(`Sound loaded and decoded: ${filePath}`);
+            return decodedBuffer;
+        } catch (error) {
+            console.error(`Error loading or decoding sound (${filePath}):`, error);
+            return null; // 失敗したらnullを返す
         }
     }
 
-    function getCurrentBpm() {
-        return currentBpm;
+    // ★★★ 全ての音源を読み込む関数 ★★★
+    async function loadAllSounds() {
+        if (!audioContext || !SOUND_FILE_PATHS || SOUND_FILE_PATHS.length === 0) {
+            console.error("Cannot load sounds: No AudioContext or sound file paths defined.");
+            return;
+        }
+        console.log(`Loading ${SOUND_FILE_PATHS.length} sound(s)...`);
+        allSoundsLoaded = false;
+        soundsLoadedCount = 0;
+        soundBuffers = []; // バッファ配列を初期化
+
+        // Promise.allを使って並列読み込み
+        const loadPromises = SOUND_FILE_PATHS.map(filePath => loadSound(filePath));
+
+        try {
+            const loadedBuffers = await Promise.all(loadPromises);
+            // 読み込みに成功したバッファだけを格納
+            soundBuffers = loadedBuffers.filter(buffer => buffer !== null);
+            soundsLoadedCount = soundBuffers.length;
+
+            if (soundsLoadedCount === SOUND_FILE_PATHS.length) {
+                allSoundsLoaded = true;
+                console.log("All sounds loaded successfully.");
+            } else {
+                console.warn(`Failed to load ${SOUND_FILE_PATHS.length - soundsLoadedCount} sound(s). Metronome will use available sounds.`);
+                // 一部しか読み込めなくても、利用可能な音で動作させる
+                allSoundsLoaded = soundsLoadedCount > 0; // 1つでも読み込めたら true とする
+            }
+            // 読み込み後に再生が必要な場合の処理 (必要なら)
+             // if (currentSpeed > 0 && allSoundsLoaded) {
+             //     setSpeed(currentSpeed); // 音がロードされたので再生再開
+             // }
+        } catch (error) {
+             console.error("Error during loading multiple sounds:", error);
+             allSoundsLoaded = false;
+        }
     }
 
-    // 従来の speedLevel (0-4) から BPM への変換
-    function levelToBpm(speedLevel) {
-        // DEFAULT_BPM_LEVELS を参照するように変更 (base.jsと合わせる)
-        // 定数は base.js 側で定義されている想定だが、こちらにも持つ方が安全かも
-        const bpmLevels = [90, 120, 140, 160, 240]; // base.js と同じ値
-        const level = Math.max(0, Math.min(speedLevel, bpmLevels.length - 1));
-        return bpmLevels[level];
-    }
-    function setSpeed(speedLevel) { setBpm(levelToBpm(speedLevel)); }
+    // ★★★ ランダムな音を選択して再生する関数 ★★★
+    function playSound() {
+        resumeAudioContext(); // 再生前に再開試行
 
-    // --- 再生ロジック ---
-    function nextNote() {
-        // BPMに基づいて次のノート時間を計算
-        const secondsPerBeat = 60.0 / currentBpm;
-        nextNoteTime += secondsPerBeat;
-    }
-
-    // 指定した時刻にランダムな音を鳴らすスケジュール
-    function scheduleNote(time) {
-        if (!audioContext || !soundsLoaded || soundBuffers.length === 0) return;
-
-        // ランダムなサウンドバッファを選択
-        const randomIndex = Math.floor(Math.random() * soundBuffers.length);
-        const bufferToPlay = soundBuffers[randomIndex];
-
-        if (!bufferToPlay) {
-            // console.warn(`Sound buffer at index ${randomIndex} is invalid.`); // 頻繁に出る可能性があるのでコメントアウト推奨
+        // 再生可能な音があり、Contextが存在する場合のみ再生
+        if (!audioContext || !allSoundsLoaded || soundBuffers.length === 0) {
+            if (DEBUG_MODE && soundBuffers.length === 0) console.warn("playSound called, but no sounds are loaded/available.");
+            else if (DEBUG_MODE) console.warn("playSound called, but audio cannot be played.");
             return;
         }
 
-        // AudioBufferSourceNode を作成して再生
-        const source = audioContext.createBufferSource();
-        source.buffer = bufferToPlay;
-        source.connect(audioContext.destination);
-        // 再生時刻が過去になっていないかチェック（遅延対策）
-        const startTime = Math.max(time, audioContext.currentTime);
-        source.start(startTime);
+        try {
+            // ランダムにバッファを選択
+            const randomIndex = Math.floor(Math.random() * soundBuffers.length);
+            const bufferToPlay = soundBuffers[randomIndex];
 
-        if (DEBUG_METRONOME) {
-            // console.log(`Sound ${randomIndex + 1}.wav scheduled at: ${time.toFixed(3)}, started at: ${startTime.toFixed(3)}`);
+            const source = audioContext.createBufferSource();
+            source.buffer = bufferToPlay;
+            source.connect(audioContext.destination);
+            source.start(0);
+        } catch (e) {
+             console.error("Error playing sound:", e);
         }
     }
 
-    // スケジューラー本体
-    function scheduler() {
-        if (!isRunning || !audioContext) return;
-        const currentTime = audioContext.currentTime;
-        while (nextNoteTime < currentTime + SCHEDULE_AHEAD_TIME) {
-            scheduleNote(nextNoteTime);
-            nextNote();
+    // メトロノームのスケジューラーを開始/更新
+    function startScheduler() {
+        stopScheduler();
+        if (isFinite(intervalMs) && intervalMs > 0 && allSoundsLoaded) { // 音が読み込まれてから開始
+            if (DEBUG_MODE) console.log(`Starting scheduler with interval: ${intervalMs}ms`);
+            playSound(); // 初回再生
+            schedulerId = setInterval(playSound, intervalMs);
+        } else {
+             if (DEBUG_MODE && !allSoundsLoaded) console.log("Scheduler not started yet (sounds loading).");
+             else if (DEBUG_MODE) console.log("Scheduler not started (interval invalid or stopped).");
         }
-        // 次回のスケジューラー呼び出しをセット
-        schedulerTimerID = window.setTimeout(scheduler, LOOKAHEAD);
     }
 
-    // --- 制御関数 ---
-    function start() {
-        if (isRunning) return false;
-        if (!audioContext) {
-             console.error("AudioContext not initialized. Cannot start.");
-             return false;
+    // スケジューラー停止
+    function stopScheduler() {
+        if (schedulerId !== null) {
+            clearInterval(schedulerId);
+            schedulerId = null;
+            if (DEBUG_MODE) console.log("Scheduler stopped.");
         }
-         resumeAudioContextIfNeeded();
-         if(audioContext.state === 'suspended') {
-             console.warn("AudioContext is suspended. Cannot start metronome yet.");
-             // alert("音声を再生するために、ページ上のどこかをクリックまたはタップしてください。");
-             return false;
-         }
-         if (!soundsLoaded) {
-             console.error("Metronome sounds not loaded yet. Cannot start.");
-             // 必要ならここでロードを待つか、再試行
-             // loadAllSounds().then(success => { if(success) start(); });
-             return false;
-         }
-
-        isRunning = true;
-        nextNoteTime = audioContext.currentTime + 0.05; // 開始タイミング調整
-        if (DEBUG_METRONOME) console.log(`Metronome starting at BPM: ${currentBpm.toFixed(1)}`);
-        scheduler(); // スケジューラを開始
-        return true;
     }
 
+    // 速度設定 (外部から呼ばれる)
+    // ★★★ intervalMs の値を調整して全体的に速くする ★★★
+    function setSpeed(speedValue) {
+        resumeAudioContext(); // 再開試行
+
+        if (typeof speedValue !== 'number' || speedValue < 0 || speedValue > 4) {
+            console.warn(`Invalid speed value received: ${speedValue}. Stopping metronome.`);
+            stop();
+            return;
+        }
+
+        currentSpeed = speedValue;
+
+        // 速度に応じて再生間隔(ms)を設定 (全体的に短く調整)
+        switch (currentSpeed) {
+            case 0: intervalMs = Infinity; break; // 停止
+            case 1: intervalMs = 500; break;  // 75 BPM相当 (旧1000ms)
+            case 2: intervalMs = 400; break;  // 100 BPM相当 (旧750ms)
+            case 3: intervalMs = 280; break;  // 150 BPM相当 (旧500ms)
+            case 4: intervalMs = 240; break;  // 240 BPM相当 (旧350ms)
+            default: intervalMs = Infinity; break;
+        }
+
+        console.log(`Metronome speed set to ${currentSpeed}, interval: ${isFinite(intervalMs) ? intervalMs + 'ms' : 'Stopped'}`);
+
+        startScheduler(); // 新しい間隔でスケジューラー開始/更新
+    }
+
+    // 完全停止
     function stop() {
-        if (!isRunning) return false;
-        window.clearTimeout(schedulerTimerID);
-        schedulerTimerID = null;
-        isRunning = false;
-        if (DEBUG_METRONOME) console.log("Metronome stopped.");
-        return true;
+        console.log("Stopping metronome completely.");
+        currentSpeed = 0;
+        intervalMs = Infinity;
+        stopScheduler();
     }
-
 
     // --- 公開インターフェース ---
     return {
-        initialize,
-        start,
-        stop,
-        setSpeed,      // 互換性のため
-        setBpm,        // BPMを直接設定
-        getCurrentBpm, // 現在のBPMを取得
-        resumeAudioContextIfNeeded
+        initialize: initialize,
+        setSpeed: setSpeed,
+        stop: stop,
+        // resumeAudioContext: resumeAudioContext // 必要なら外部公開
     };
 })();
