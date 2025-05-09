@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONSP Project (しこしこモード)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="placeholder.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+
+    <div class="tab-container">
+        <button class="tab-button active" data-tab-target="#fortuneSection">しこしこモード</button>
+        <button class="tab-button" data-tab-target="#counterSection">カウンター</button>
+        <button class="tab-button" data-tab-target="#imepureSection">イメプレイ</button>
+        <button class="tab-button" data-tab-target="#gallerySection">ギャラリー</button>
+    </div>
+
+    <!-- しこしこモードセクション -->
+    <div class="tab-content active" id="fortuneSection">
+
+        <!-- 残り時間バー -->
+        <div id="remainingTimeBarContainer" style="display: none;">
+            <div class="time-bar-label">残り時間: <span id="remainingTimeLabel">--:--</span></div>
+            <progress id="remainingTimeBar" max="100" value="100"></progress>
+        </div>
+
+        <div class="fortune-wrapper">
+
+            <!-- 左カラム: 設定 -->
+            <div class="fortune-left-column">
+                <div class="member-selection-accordion">
+                    <button class="accordion-toggle" id="accordionToggle" aria-expanded="false"> 設定 <span class="toggle-icon">▼</span> </button>
+                    <div class="accordion-content" id="accordionContent">
+                        <div class="slider-group"> <h4 class="slider-group-title">メンバー出現率</h4> <div class="slider-container member-sliders"> <p id="memberSliderPlaceholder">メンバー読み込み中...</p> </div> <p class="selection-note">数値が高いほど出やすくなります(0は出ません)</p> </div>
+                        <div class="slider-group"> <h4 class="slider-group-title">エフェクト設定</h4> <div class="effect-slider-item"> <label for="pulseBrightnessSlider">背景の明るさ:</label> <input type="range" id="pulseBrightnessSlider" min="0" max="5" step="1" value="3"> <span class="slider-value" id="pulseBrightnessValue">3</span> </div> </div>
+                        <div class="setting-group game-duration-group">
+                            <h4 class="slider-group-title">持続時間設定</h4>
+                            <div class="duration-setting-item">
+                                <label for="gameDurationMinutes">時間:</label>
+                                <input type="number" id="gameDurationMinutes" value="3" min="0" step="1" style="max-width: 60px;">
+                                <span>分</span>
+                                <input type="number" id="gameDurationSeconds" value="0" min="0" max="59" step="5" style="max-width: 60px;">
+                                <span>秒</span>
+                            </div>
+                             <p class="feature-note">ゲームの持続時間を設定します (最低30秒)。</p>
+                        </div>
+                        <div class="setting-group tag-filter-group"> <h4 class="slider-group-title">画像タグフィルター</h4> <div class="tag-filter-options"> <label>検索モード:</label> <div class="radio-group"> <input type="radio" id="tagSearchAnd" name="tagSearchMode" value="AND" checked> <label for="tagSearchAnd">AND (全て含む)</label> <input type="radio" id="tagSearchOr" name="tagSearchMode" value="OR"> <label for="tagSearchOr">OR (いずれか含む)</label> </div> </div> <div class="tag-filter-selection"> <label>フィルタータグ選択:</label> <div id="tagFilterButtonsContainer"> <p class="no-tags-message">利用可能なタグがありません</p> </div> <p id="tagFilterStatus">フィルター未適用</p> <button id="clearTagFilterButton" class="action-button small secondary">選択解除</button> </div> </div>
+                        <div class="setting-group tag-setting-control"> <h4 class="slider-group-title">画像タグ設定・管理</h4> <button id="startTaggingButton" class="action-button small">タグ付けモード開始</button> <div class="tag-import-export-area"> <label for="importTagFile" class="action-button small secondary">タグ読込(JSON)</label> <input type="file" id="importTagFile" accept=".json" style="display: none;"> <button id="importTagsButton" class="action-button small" disabled>インポート実行</button> <button id="exportTagsButton" class="action-button small secondary">タグ書出(JSON)</button> <p id="importStatus" class="feature-note" style="width: 100%; margin-top: 5px;">JSONファイルを選択</p> </div> </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中央カラム: 表示 -->
+            <div class="fortune-center-column">
+                <h1>しこしこモード</h1>
+                <div class="display-area" id="fortuneDisplayArea">
+                    <div class="fortune-header"> <h2 id="memberName">メンバー名</h2> <button class="weak-point-toggle icon-button" id="fortuneWeakPointButton" title="弱点登録/解除" data-relpath="" style="display: none;">☆</button> </div>
+                    <img id="memberImage" src="placeholder.png" alt="メンバー画像">
+                    <div class="image-tags-container" id="imageTagsContainer" style="display: none;"></div>
+                    <p id="memberQuote">ここにセリフが表示されます</p>
+                    <div class="quote-tags-container" id="quoteTagsContainer" style="display: none;"></div>
+                     <!-- 貼り付けられたステッカーはこのエリアに絶対配置される -->
+                </div>
+                <div class="button-area">
+                    <button id="startGameButton" class="action-button primary">開始</button>
+                    <button id="finishButton" class="action-button secondary" disabled>フィニッシュ</button>
+                </div>
+            </div>
+
+            <!-- 右カラム: ステッカー -->
+            <div class="fortune-right-column">
+                <div id="stickerSection">
+                    <h4>ステッカーを貼る</h4>
+                    <div id="stickerChoiceContainer">
+                        <p class="sticker-loading">ステッカー読込中...</p>
+                    </div>
+                     <button id="clearAllStickersButton" class="action-button small secondary" style="margin-top: 15px; width: 100%;">全ステッカー削除</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- タグ付けモード -->
+        <div id="taggingModeSection" style="display: none;">
+            <h2>画像タグ設定</h2>
+            <div id="taggingImageContainer"> <img id="taggingImage" src="placeholder.png" alt="タグ付け対象画像"> <p id="taggingImageInfo">ファイル情報</p> </div> <div id="taggingControls"> <div class="tag-input-area"> <label for="tagInput">現在のタグ (カンマ区切り):</label> <input type="text" id="tagInput" placeholder="例: 笑顔, 私服, 自撮り"> <label>タグ候補:</label> <div id="suggestedTagsContainer"></div> <div id="currentTagsContainer"> <label>選択中のタグ:</label> <span id="currentTagsDisplay">なし</span> </div> </div> <div class="tag-navigation"> <button id="prevTagImageButton" class="action-button small secondary">← 前へ</button> <button id="saveTagsButton" class="action-button primary">保存して次へ (Enter)</button> <button id="skipTagImageButton" class="action-button secondary">スキップ</button> <button id="nextTagImageButton" class="action-button small secondary">次へ →</button> </div> </div> <p id="taggingProgress">進捗: 1/X</p> <div class="tag-mode-exit-area"> <button id="exitTaggingButton" class="action-button secondary">タグ設定モード終了 (Esc)</button> </div>
+        </div>
+
+        <!-- ▼▼▼ しこしこ画像コンテナ ▼▼▼ -->
+        <div id="shikoContainer" style="display: none;">
+            <img id="saoImage" src="images/竿.png" alt="竿">
+            <img id="shikoshikoImage" src="images/しこしこ.png" alt="しこしこアニメーション"> <!-- ファイル名変更 -->
+        </div>
+        <!-- ▲▲▲ しこしこ画像コンテナ ▲▲▲ -->
+
+    </div> <!-- #fortuneSection 終了 -->
+
+    <!-- カウンターセクション -->
+    <div class="tab-content" id="counterSection">
+        <h1>回数カウンター</h1>
+        <p class="counter-instruction">画像をクリックするとカウントが増えます。</p>
+        <div class="counter-controls">
+            <button id="decreaseModeButton" class="counter-mode-button">減らすモード OFF</button>
+        </div>
+        <div class="counter-grid" id="counterGrid"></div>
+    </div>
+
+    <!-- イメプレイセクション -->
+    <div class="tab-content" id="imepureSection">
+        <div class="imepure-main-area">
+            <div class="imepure-header">
+                <div class="control-group character-select-group">
+                    <label for="imepureCharacterSelect">相手:</label>
+                    <select id="imepureCharacterSelect">
+                        <option value="">-- キャラ選択 --</option>
+                    </select>
+                </div>
+                <div class="control-group situation-select-group">
+                    <label for="imepureSituationSelect">状況:</label>
+                    <select id="imepureSituationSelect">
+                        <option value="">-- シチュ選択 --</option>
+                    </select>
+                </div>
+                <button id="imepureOpenSettingsButton" class="icon-button" title="設定">⚙️</button>
+                <button id="imepureEjaculateButton" class="icon-button" title="射精">💦</button>
+            </div>
+            <div class="chat-log-container" id="imepureChatLog"></div>
+            <div class="imepure-footer">
+                <div class="imepure-sfx-area" id="imepureSfxArea">
+                    <span class="sfx-placeholder">進行タグを選択すると効果音ボタンが表示されます</span>
+                </div>
+                <div class="imepure-input-area">
+                    <textarea id="imepureUserInput" rows="1" placeholder="指示や感情を入力 (Enterで送信)" disabled></textarea>
+                    <button id="imepureGenerateButton" class="action-button generate-button" disabled>セリフ生成</button>
+                    <button id="imepureSendButton" class="action-button send-button" disabled title="指示送信">🚀</button>
+                </div>
+            </div>
+        </div>
+        <div class="imepure-progress-tag-area">
+            <div class="progress-tag-column" id="imepureTimelineArea">
+                <h4>タイムライン</h4>
+                <div class="timeline-container" id="imepureTimeline">
+                    <div class="timeline-placeholder">選択肢からタグを追加</div>
+                </div>
+                <div class="trash-area" id="imepureTrashArea">
+                    <span class="trash-icon">🗑️</span> ここにドロップして削除
+                </div>
+            </div>
+            <div class="progress-tag-column" id="imepureTagChoiceArea">
+                <h4>選択肢</h4>
+                <div class="tag-choice-container" id="imepureTagChoices"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ギャラリーセクション -->
+    <div class="tab-content" id="gallerySection">
+        <h1>ギャラリー</h1>
+        <div class="gallery-controls">
+            <label for="galleryMemberFilter">メンバー:</label>
+            <select id="galleryMemberFilter">
+                <option value="all">全員</option>
+            </select>
+            <label for="galleryTypeFilter">タイプ:</label>
+            <select id="galleryTypeFilter">
+                <option value="all">すべて</option>
+                <option value="ero">EROのみ</option>
+                <option value="hutuu">通常のみ</option>
+            </select>
+            <div class="gallery-toggle-weak">
+                <input type="checkbox" id="galleryWeakPointFilter">
+                <label for="galleryWeakPointFilter">弱点画像のみ表示</label>
+            </div>
+            <button id="galleryRefreshButton" class="action-button small">更新</button>
+        </div>
+        <div id="galleryGrid">
+            <p class="gallery-loading">ギャラリーを読み込み中...</p>
+        </div>
+    </div>
+
+    <!-- 射精通知 -->
+    <div id="ejaculationNotification">通知エリア</div>
+
+    <!-- イメプレイ設定モーダル -->
+    <div id="imepureSettingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="imepureCloseModalButton" title="閉じる">×</span>
+            <h2>イメプレイ設定</h2>
+            <div class="modal-body">
+                <div class="setting-group character-persona-group">
+                    <h4>キャラクター設定 (<span id="modalCharacterName">キャラ名</span>)</h4>
+                    <div class="setting-item"> <label for="modalCharacterAge">年齢:</label> <input type="number" id="modalCharacterAge" min="0"> </div>
+                    <div class="setting-item"> <label for="modalFirstPerson">一人称:</label> <input type="text" id="modalFirstPerson" placeholder="例: 私, ボク"> </div>
+                    <div class="setting-item"> <label for="modalDialect">方言/口調:</label> <input type="text" id="modalDialect" placeholder="例: 標準語, 関西弁"> </div>
+                    <div class="setting-item"> <label for="modalRelationship">あなたとの関係:</label> <input type="text" id="modalRelationship" placeholder="例: 幼馴染, クラスメイト"> </div>
+                    <div class="setting-item"> <label for="modalHeartEmoji">好意の絵文字:</label> <input type="text" id="modalHeartEmoji" value="💖"> </div>
+                    <div class="setting-item"> <label for="modalPersonality">性格:</label> <textarea id="modalPersonality" rows="2" placeholder="AIへの性格指示"></textarea> </div>
+                    <div class="setting-item"> <label for="modalAppearance">外見メモ:</label> <textarea id="modalAppearance" rows="2" placeholder="外見の特徴など (AI指示には含まず)"></textarea> </div>
+                    <div class="setting-item"> <label for="modalSpeechStyle">話し方メモ:</label> <textarea id="modalSpeechStyle" rows="2" placeholder="具体的な話し方の特徴など (AI指示用)"></textarea> </div>
+                    <div class="setting-item"> <label for="modalEmotionExpressionDesc">感情表現メモ:</label> <textarea id="modalEmotionExpressionDesc" rows="2" placeholder="感情の表し方の特徴など (AI指示用)"></textarea> </div>
+                    <div class="setting-item"> <label for="modalSexPreferences">性的な好み/反応:</label> <textarea id="modalSexPreferences" rows="3" placeholder="性的な好みや反応の詳細 (AI指示用)"></textarea> </div>
+                </div>
+                <div class="setting-group player-info-group">
+                    <h4>プレイヤー（あなた）の情報</h4>
+                    <div class="setting-item"> <label for="playerInfoName">あなたの名前:</label> <input type="text" id="playerInfoName" placeholder="AIがあなたを呼ぶ名前"> </div>
+                    <div class="setting-item"> <label for="playerInfoAge">あなたの年齢:</label> <input type="number" id="playerInfoAge" min="0"> </div>
+                    <div class="setting-item"> <label for="playerInfoMemo">あなたの特徴メモ:</label> <textarea id="playerInfoMemo" rows="2" placeholder="AIへの参考情報 (例: 背が高い、優しい性格)"></textarea> </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="imepureSaveSettingsButton" class="action-button primary">保存して閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ステッカーカーソル用プレビュー要素 -->
+    <div id="stickerCursorPreview" style="display: none;"></div>
+
+    <!-- JavaScript読み込み -->
+    <script src="config.js"></script>
+    <script src="config_secret.js"></script>
+    <script src="js/feature_counter.js"></script>
+    <!-- <script src="js/feature_spacebar.js"></script> -->
+    <script src="js/feature_imepure.js"></script>
+    <script src="js/feature_metronome.js"></script>
+    <script src="js/base.js"></script>
+
+</body>
+</html>
